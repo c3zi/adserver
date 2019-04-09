@@ -52,6 +52,16 @@ services:
     volumes:
       - database:/var/lib/mysql
 
+  database-testing:
+    image: percona:5
+    environment:
+      - MYSQL_ROOT_PASSWORD=adshares
+      - MYSQL_DATABASE=adserver
+      - MYSQL_USER=adserver
+      - MYSQL_PASSWORD=adserver
+    ports:
+      - "3308:3306"
+
   mailer:
     image: mailhog/mailhog:latest
     user: ${SYSTEM_USER_ID}
