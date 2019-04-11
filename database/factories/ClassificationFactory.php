@@ -25,6 +25,7 @@ use Faker\Generator as Faker;
 
 $factory->define(Classification::class, function (Faker $faker) {
     return [
+        'id' => 1,
         'user_id' => $faker->randomDigit,
         'site_id' => $faker->randomDigit,
         'banner_id' => $faker->randomDigit,

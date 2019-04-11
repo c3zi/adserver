@@ -141,14 +141,14 @@ class SitesTest extends TestCase
     {
         $presets = [
             [
-                "status" => "0",
-                "name" => "nameA",
-                "primaryLanguage" => "pl",
+//                'status' => '0',
+                'name' => 'nameA',
+                'primaryLanguage' => 'pl',
             ],
             [
-                'status' => "1",
-                "name" => "nameB",
-                "primaryLanguage" => "en",
+                'status' => '1',
+                'name' => 'nameB',
+                'primaryLanguage' => 'en',
             ],
         ];
 

@@ -25,6 +25,7 @@ namespace Adshares\Adserver\Tests\Http;
 use Adshares\Adserver\Models\Classification;
 use Adshares\Adserver\Models\NetworkBanner;
 use Adshares\Adserver\Models\NetworkCampaign;
+use Adshares\Adserver\Models\Site;
 use Adshares\Adserver\Models\User;
 use Adshares\Adserver\Tests\TestCase;
 use Adshares\Classify\Application\Service\SignatureVerifierInterface;
@@ -43,12 +44,14 @@ final class ClassifierControllerTest extends TestCase
         $user->is_advertiser = 1;
         $this->actingAs($user, 'api');
 
+        $site = factory(Site::class)->create(['user_id' => $user->id]);
+
         factory(NetworkCampaign::class)->create(['id' => 1]);
         factory(NetworkCampaign::class)->create(['id' => 2]);
         factory(NetworkBanner::class)->create(['network_campaign_id' => 1]);
         factory(NetworkBanner::class)->create(['network_campaign_id' => 1]);
         factory(NetworkBanner::class)->create(['network_campaign_id' => 2]);
-        factory(Classification::class)->create();
+        factory(Classification::class)->create(['user_id' => $user->id, 'site_id' => $site->id, 'banner_id' => 1]);
 
         $response = $this->getJson(self::CLASSIFICATION_LIST);
         $content = json_decode($response->getContent(), true);
@@ -96,12 +99,16 @@ final class ClassifierControllerTest extends TestCase
         $user->is_advertiser = 1;
         $this->actingAs($user, 'api');
 
+        $site = factory(Site::class)->create(['user_id' => $user->id]);
+
         factory(NetworkCampaign::class)->create(['id' => 1]);
         factory(NetworkBanner::class)->create(['id' => 1, 'network_campaign_id' => 1]);
         factory(NetworkBanner::class)->create(['id' => 2, 'network_campaign_id' => 1]);
-        factory(Classification::class)->create(['banner_id' => 1, 'status' => 0, 'site_id' => 3, 'user_id' => 1]);
+        factory(Classification::class)->create(
+            ['id' => 5, 'banner_id' => 1, 'status' => 0, 'site_id' => $site->id, 'user_id' => $user->id]
+        );
 
-        $response = $this->getJson(self::CLASSIFICATION_LIST.'/3');
+        $response = $this->getJson(self::CLASSIFICATION_LIST.'/'.$site->id);
         $content = json_decode($response->getContent(), true);
         $items = $content['items'];
 
@@ -117,13 +124,19 @@ final class ClassifierControllerTest extends TestCase
         $user->is_advertiser = 1;
         $this->actingAs($user, 'api');
 
+        $site = factory(Site::class)->create(['user_id' => $user->id]);
+
         factory(NetworkCampaign::class)->create(['id' => 1]);
         factory(NetworkBanner::class)->create(['id' => 1, 'network_campaign_id' => 1]);
         factory(NetworkBanner::class)->create(['id' => 2, 'network_campaign_id' => 1]);
-        factory(Classification::class)->create(['banner_id' => 1, 'status' => 0, 'site_id' => 3, 'user_id' => 1]);
-        factory(Classification::class)->create(['banner_id' => 1, 'status' => 1, 'site_id' => null, 'user_id' => 1]);
+        factory(Classification::class)->create(
+            ['banner_id' => 1, 'status' => 0, 'site_id' => $site->id, 'user_id' => $user->id, 'id' => 1]
+        );
+        factory(Classification::class)->create(
+            ['banner_id' => 1, 'status' => 1, 'site_id' => null, 'user_id' => $user->id, 'id' => 2]
+        );
 
-        $response = $this->getJson(self::CLASSIFICATION_LIST.'/3');
+        $response = $this->getJson(self::CLASSIFICATION_LIST.'/'.$site->id);
         $content = json_decode($response->getContent(), true);
         $items = $content['items'];
 
@@ -211,20 +224,23 @@ final class ClassifierControllerTest extends TestCase
         $user->is_advertiser = 1;
         $this->actingAs($user, 'api');
 
+        $site = factory(Site::class)->create(['user_id' => $user->id]);
+
         factory(NetworkCampaign::class)->create(['id' => 1]);
         factory(NetworkBanner::class)->create(['id' => 1, 'network_campaign_id' => 1]);
 
         $data = [
             'classification' => [
+                'site_id' => $site->id,
                 'banner_id' => 1,
                 'status' => true,
             ],
         ];
 
-        $response = $this->patchJson(self::CLASSIFICATION_LIST.'/1', $data);
+        $response = $this->patchJson(self::CLASSIFICATION_LIST.'/'.$site->id, $data);
 
         $classification = Classification::where('banner_id', 1)
-            ->where('site_id', 1)
+            ->where('site_id', $site->id)
             ->first();
 
         $this->assertTrue($classification->status);
@@ -238,18 +254,23 @@ final class ClassifierControllerTest extends TestCase
         $user->is_advertiser = 1;
         $this->actingAs($user, 'api');
 
+        $site = factory(Site::class)->create(['user_id' => $user->id]);
+
         factory(NetworkCampaign::class)->create(['id' => 1]);
         factory(NetworkBanner::class)->create(['id' => 1, 'network_campaign_id' => 1]);
-        factory(Classification::class)->create(['banner_id' => 1, 'status' => 0, 'site_id' => 5, 'user_id' => 1]);
+        factory(Classification::class)->create(
+            ['banner_id' => 1, 'status' => 0, 'site_id' => $site->id, 'user_id' => $user->id]
+        );
 
         $data = [
             'classification' => [
+                'site_id' => $site->id,
                 'banner_id' => 1,
                 'status' => true,
             ],
         ];
 
-        $response = $this->patchJson(self::CLASSIFICATION_LIST.'/5', $data);
+        $response = $this->patchJson(self::CLASSIFICATION_LIST.'/'.$site->id, $data);
 
         $classification = Classification::where('banner_id', 1)
             ->where('site_id', 5)
